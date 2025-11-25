@@ -55,16 +55,10 @@ router.post('/:userId/chat', async (req, res) => {
     // Add user message to history
     history.push({ role: 'user', content: message });
 
-    // Generate response from agent
-    const result = await codingAgent.generateText(
-      message,
-      {
-        temperature: 0.2,
-        maxTokens: 4096,
-        // Pass userId as context for tools
-        userId,
-      }
-    );
+    // Generate response from agent with proper context for tools
+    const result = await codingAgent.generateText(message, {
+      userId, // Pass userId to tool context
+    });
 
     // Add assistant response to history
     history.push({ role: 'assistant', content: result.text });
