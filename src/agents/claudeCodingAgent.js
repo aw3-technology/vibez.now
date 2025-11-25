@@ -209,7 +209,7 @@ Best practices:
 5. Be helpful, clear, and concise in your responses
 
 Remember: Each user has their own isolated workspace. You can only access files within the current user's workspace.`,
-    model: anthropic('claude-3-5-sonnet-latest'),
+    model: anthropic('claude-3-5-sonnet-20241022'),
     tools: [
       readFileTool,
       writeFileTool,
