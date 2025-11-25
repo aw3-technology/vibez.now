@@ -41,6 +41,10 @@ app.get('/api/v1/vibez', (req, res) => {
   });
 });
 
+// Agent routes
+const agentRoutes = require('./src/routes/agent');
+app.use('/api/agent', agentRoutes);
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: 'Not Found' });
