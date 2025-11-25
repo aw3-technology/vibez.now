@@ -189,7 +189,7 @@ function createCodingAgent() {
     throw new Error('ANTHROPIC_API_KEY environment variable is required');
   }
 
-  const model = anthropic('claude-3-5-sonnet-20241022');
+  const model = anthropic('claude-sonnet-4-5');
 
   return new Agent({
     name: 'claude-coding-agent',
