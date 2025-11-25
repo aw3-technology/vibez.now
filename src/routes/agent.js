@@ -57,9 +57,7 @@ router.post('/:userId/chat', async (req, res) => {
 
     // Generate response from agent
     const result = await codingAgent.generateText(
-      {
-        messages: history,
-      },
+      message,
       {
         temperature: 0.2,
         maxTokens: 4096,
