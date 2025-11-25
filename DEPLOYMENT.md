@@ -17,14 +17,15 @@ The backend is deployed and running with:
 - PM2 process manager with auto-restart on reboot
 - HTTPS ready (needs SSL certificate after DNS setup)
 
-## DNS Configuration Required
+## DNS Configuration (COMPLETED ✅)
 
-**IMPORTANT**: Before SSL can be configured, add an A record to your DNS:
+DNS has been configured with the following A record:
 ```
 Type: A
-Host: dev.vibez.now
+Host: dev
+Domain: vibez.now
 Value: 13.56.236.209
-TTL: 300 (or your preferred value)
+TTL: 60 seconds
 ```
 
 ## AWS Security Group Configuration
@@ -34,21 +35,15 @@ Ensure the following inbound rules are configured:
 - **HTTP**: Port 80 - Source: 0.0.0.0/0
 - **HTTPS**: Port 443 - Source: 0.0.0.0/0
 
-## Setting up SSL/TLS (After DNS is configured)
+## SSL/TLS Configuration (COMPLETED ✅)
 
-Once DNS is pointing to the EC2 instance, run:
+SSL certificate has been successfully configured with Let's Encrypt:
+- **Certificate for**: dev.vibez.now
+- **Issued**: November 25, 2025
+- **Expires**: February 23, 2026
+- **Auto-renewal**: Configured (runs twice daily)
 
-```bash
-ssh -i /Users/williamschulz/Downloads/Vibez.now.pem ec2-user@ec2-13-56-236-209.us-west-1.compute.amazonaws.com
-
-# Run Certbot to get SSL certificate
-sudo certbot --nginx -d dev.vibez.now --non-interactive --agree-tos --email your-email@example.com
-
-# Certbot will automatically:
-# - Obtain SSL certificate from Let's Encrypt
-# - Configure Nginx for HTTPS
-# - Set up auto-renewal
-```
+The certificate will automatically renew before expiration via cron job.
 
 ## Deploying Updates
 
@@ -95,16 +90,13 @@ pm2 logs vibez-now-backend --lines 50
 
 ## API Endpoints
 
-Once DNS and SSL are configured, your API will be available at:
+Your API is now live and accessible via HTTPS:
 
-- Health Check: `https://dev.vibez.now/health`
-- API Info: `https://dev.vibez.now/api/v1`
-- Vibez Endpoint: `https://dev.vibez.now/api/v1/vibez`
+- **Health Check**: `https://dev.vibez.now/health`
+- **API Info**: `https://dev.vibez.now/api/v1`
+- **Vibez Endpoint**: `https://dev.vibez.now/api/v1/vibez`
 
-Currently accessible via:
-- `http://ec2-13-56-236-209.us-west-1.compute.amazonaws.com/health`
-- `http://ec2-13-56-236-209.us-west-1.compute.amazonaws.com/api/v1`
-- `http://ec2-13-56-236-209.us-west-1.compute.amazonaws.com/api/v1/vibez`
+HTTP requests are automatically redirected to HTTPS.
 
 ## Troubleshooting
 
