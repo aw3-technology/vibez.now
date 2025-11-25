@@ -189,6 +189,8 @@ function createCodingAgent() {
     throw new Error('ANTHROPIC_API_KEY environment variable is required');
   }
 
+  const model = anthropic('claude-3-5-sonnet-20241022');
+
   return new Agent({
     name: 'claude-coding-agent',
     instructions: `You are a senior full-stack engineer with access to a user's isolated workspace.
@@ -209,7 +211,7 @@ Best practices:
 5. Be helpful, clear, and concise in your responses
 
 Remember: Each user has their own isolated workspace. You can only access files within the current user's workspace.`,
-    model: anthropic('claude-3-5-sonnet-20241022'),
+    model,
     tools: [
       readFileTool,
       writeFileTool,
