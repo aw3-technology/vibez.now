@@ -13,7 +13,7 @@ const users = new Map();
  * Register a new user
  */
 router.post('/register', async (req, res) => {
-  const { email, password, username } = req.body;
+  const { email, password, username, vibezUserId } = req.body;
 
   // Validation
   if (!email || !password) {
@@ -42,13 +42,14 @@ router.post('/register', async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
-    const userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+    // Use provided vibezUserId or generate new one
+    const userId = vibezUserId || 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     const user = {
       userId,
       email,
       username: username || email.split('@')[0],
       password: hashedPassword,
+      vibezUserId: vibezUserId || null,
       createdAt: new Date().toISOString(),
     };
 
@@ -65,6 +66,7 @@ router.post('/register', async (req, res) => {
         userId: user.userId,
         email: user.email,
         username: user.username,
+        vibezUserId: user.vibezUserId,
       },
     });
   } catch (error) {
@@ -122,6 +124,7 @@ router.post('/login', async (req, res) => {
         userId: user.userId,
         email: user.email,
         username: user.username,
+        vibezUserId: user.vibezUserId,
       },
     });
   } catch (error) {
@@ -164,6 +167,7 @@ router.get('/me', require('../middleware/auth').authenticateToken, (req, res) =>
       userId: user.userId,
       email: user.email,
       username: user.username,
+      vibezUserId: user.vibezUserId,
       createdAt: user.createdAt,
     },
   });

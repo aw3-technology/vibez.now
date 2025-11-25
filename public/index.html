@@ -262,8 +262,10 @@
   -d '{
     "email": "you@example.com",
     "password": "yourpassword",
-    "username": "YourName"
+    "username": "YourName",
+    "vibezUserId": "optional-vibez-user-id-from-frontend"
   }'</code></pre>
+                    <p><strong>Note:</strong> The <code>vibezUserId</code> parameter is optional. If provided, it will link this account to your Vibez.now mobile app user. If omitted, a new user ID will be generated.</p>
                     <p><strong>Response:</strong></p>
                     <pre><code>{
   "success": true,
@@ -271,7 +273,8 @@
   "user": {
     "userId": "user_1234567890_abc123",
     "email": "you@example.com",
-    "username": "YourName"
+    "username": "YourName",
+    "vibezUserId": "optional-vibez-user-id-from-frontend"
   }
 }</code></pre>
                 </div>
