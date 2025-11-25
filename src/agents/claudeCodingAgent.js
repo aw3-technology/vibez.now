@@ -237,6 +237,105 @@ const requestApprovalTool = createTool({
 });
 
 /**
+ * Tool: Clone a Git repository
+ */
+const gitCloneTool = createTool({
+  name: 'git_clone',
+  description: 'Clone a Git repository into a folder in the workspace. Useful for pulling projects from GitHub.',
+  parameters: z.object({
+    repoUrl: z.string().describe('Git repository URL (e.g., https://github.com/user/repo.git)'),
+    folderName: z.string().describe('Name of the folder to clone into'),
+    branch: z.string().optional().describe('Specific branch to clone (optional, defaults to main/master)'),
+  }),
+  async execute({ repoUrl, folderName, branch }, { userId }) {
+    const workspaceRoot = await getUserWorkspace(userId);
+    const targetPath = path.join(workspaceRoot, folderName);
+
+    // Security: prevent path traversal
+    if (!targetPath.startsWith(workspaceRoot)) {
+      throw new Error('Invalid path: cannot access files outside workspace');
+    }
+
+    // Check if folder already exists
+    try {
+      await fs.access(targetPath);
+      return { success: false, error: 'Folder already exists. Please use a different folder name or delete the existing folder first.' };
+    } catch {
+      // Folder doesn't exist, good to proceed
+    }
+
+    try {
+      const branchArg = branch ? `-b ${branch}` : '';
+      const { stdout, stderr } = await execAsync(
+        `git clone ${branchArg} "${repoUrl}" "${targetPath}"`,
+        { cwd: workspaceRoot, timeout: 60000 }
+      );
+      return {
+        success: true,
+        message: `Successfully cloned repository to ${folderName}`,
+        stdout: stdout || '',
+        stderr: stderr || '',
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        stderr: error.stderr || '',
+      };
+    }
+  },
+});
+
+/**
+ * Tool: Run git commands
+ */
+const gitCommandTool = createTool({
+  name: 'git_command',
+  description: 'Run git commands like status, add, commit, push, pull, etc. in a specific folder.',
+  parameters: z.object({
+    command: z.string().describe('Git command to run (e.g., "status", "add .", "commit -m \'message\'", "push origin main")'),
+    folderPath: z.string().describe('Path to the git repository folder (relative to workspace root)'),
+  }),
+  async execute({ command, folderPath }, { userId }) {
+    const workspaceRoot = await getUserWorkspace(userId);
+    const repoPath = path.join(workspaceRoot, folderPath);
+
+    // Security: prevent path traversal
+    if (!repoPath.startsWith(workspaceRoot)) {
+      throw new Error('Invalid path: cannot access files outside workspace');
+    }
+
+    // Check if folder exists
+    try {
+      await fs.access(repoPath);
+    } catch {
+      return { success: false, error: `Folder ${folderPath} does not exist` };
+    }
+
+    try {
+      const { stdout, stderr } = await execAsync(
+        `git ${command}`,
+        { cwd: repoPath, timeout: 30000 }
+      );
+      return {
+        success: true,
+        stdout: stdout || '',
+        stderr: stderr || '',
+        command: `git ${command}`,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+        stdout: error.stdout || '',
+        stderr: error.stderr || '',
+        exitCode: error.code || 1,
+      };
+    }
+  },
+});
+
+/**
  * Create a Claude coding agent instance
  */
 function createCodingAgent() {
@@ -251,7 +350,7 @@ function createCodingAgent() {
   return new Agent({
     name: 'claude-coding-agent',
     instructions: `You are a senior full-stack engineer with access to a user's isolated workspace.
-You can read, write, list, and delete files, as well as run Node.js scripts.
+You can read, write, list, and delete files, run Node.js scripts, and work with Git repositories.
 
 Your capabilities:
 - read_file: Read any file in the workspace
@@ -259,6 +358,15 @@ Your capabilities:
 - list_files: List directory contents
 - delete_file: Remove files
 - run_node: Execute Node.js scripts and see their output
+- git_clone: Clone a Git repository into a folder
+- git_command: Run git commands (status, add, commit, push, pull, etc.)
+
+Git workflow example:
+1. Use git_clone to clone a repository: git_clone with repoUrl and folderName
+2. Make changes to files using write_file
+3. Stage changes: git_command with command "add ." and folderPath
+4. Commit: git_command with command "commit -m 'your message'" and folderPath
+5. Push: git_command with command "push origin main" and folderPath
 
 Best practices:
 1. Always check if a file exists using list_files before reading
@@ -266,6 +374,8 @@ Best practices:
 3. When writing code, follow best practices and include comments
 4. Test your code using run_node when appropriate
 5. Be helpful, clear, and concise in your responses
+6. For git operations, always check git status before committing
+7. Use descriptive commit messages
 
 Remember: Each user has their own isolated workspace. You can only access files within the current user's workspace.
 
@@ -273,7 +383,7 @@ Remember: Each user has their own isolated workspace. You can only access files 
 - Before deleting multiple files or important files
 - Before running potentially destructive commands
 - Before making significant changes to critical files
-- When deploying or publishing code
+- Before pushing to a git repository (deploying code)
 - Any action that could have major consequences
 
 Use the request_approval tool to get explicit user confirmation via the Vibez.now mobile app.`,
@@ -284,6 +394,8 @@ Use the request_approval tool to get explicit user confirmation via the Vibez.no
       listFilesTool,
       runNodeTool,
       deleteFileTool,
+      gitCloneTool,
+      gitCommandTool,
       requestApprovalTool,
     ],
   });
