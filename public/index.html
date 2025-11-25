@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibez.now API Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        h3 {
+            color: #764ba2;
+            margin: 20px 0 10px 0;
+        }
+
+        .endpoint {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .method {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 0.9em;
+        }
+
+        .method.post {
+            background: #28a745;
+            color: white;
+        }
+
+        .method.get {
+            background: #007bff;
+            color: white;
+        }
+
+        .method.delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        pre code {
+            background: none;
+            color: inherit;
+            padding: 0;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .feature-card h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #28a745;
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .try-it {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin: 30px 0;
+        }
+
+        .try-it h3 {
+            color: white;
+            margin-top: 0;
+        }
+
+        button {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #response {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 6px;
+            min-height: 60px;
+            color: white;
+        }
+
+        .response-success {
+            background: rgba(40, 167, 69, 0.2) !important;
+        }
+
+        .response-error {
+            background: rgba(220, 53, 69, 0.2) !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎵 Vibez.now API</h1>
+            <p>AI-Powered Coding Agents via REST API</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">
+                <span class="status-indicator"></span>
+                <span id="status">Checking status...</span>
+            </p>
+        </header>
+
+        <div class="content">
+            <div class="section">
+                <h2>Overview</h2>
+                <p>The Vibez.now API provides headless Claude Code-style AI agents that can read, write, and execute code in isolated user workspaces. Perfect for building AI-powered development tools, chatbots, and automation.</p>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h4>🤖 Claude Sonnet 4.5</h4>
+                        <p>Powered by Anthropic's latest model</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🔧 5 Core Tools</h4>
+                        <p>Read, write, list, delete files, run code</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>🔒 Isolated Workspaces</h4>
+                        <p>Per-user file system isolation</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>💬 Conversation History</h4>
+                        <p>Stateful conversations per user</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>API Endpoints</h2>
+
+                <div class="endpoint">
+                    <h3><span class="method post">POST</span> /api/agent/:userId/chat</h3>
+                    <p>Send a message to the AI coding agent</p>
+                    <pre><code>curl -X POST https://dev.vibez.now/api/agent/USER_ID/chat \
+  -H "Content-Type: application/json" \
+  -d '{
+    "message": "Create a hello.js file that prints Hello World"
+  }'</code></pre>
+                    <p><strong>Response:</strong></p>
+                    <pre><code>{
+  "success": true,
+  "reply": "I'll create a hello.js file for you...",
+  "usage": {
+    "inputTokens": 1234,
+    "outputTokens": 567,
+    "totalTokens": 1801
+  },
+  "toolCalls": 1,
+  "conversationLength": 2
+}</code></pre>
+                </div>
+
+                <div class="endpoint">
+                    <h3><span class="method get">GET</span> /api/agent/:userId/history</h3>
+                    <p>Retrieve conversation history for a user</p>
+                    <pre><code>curl https://dev.vibez.now/api/agent/USER_ID/history</code></pre>
+                </div>
+
+                <div class="endpoint">
+                    <h3><span class="method delete">DELETE</span> /api/agent/:userId/history</h3>
+                    <p>Clear conversation history for a user</p>
+                    <pre><code>curl -X DELETE https://dev.vibez.now/api/agent/USER_ID/history</code></pre>
+                </div>
+
+                <div class="endpoint">
+                    <h3><span class="method get">GET</span> /api/agent/status</h3>
+                    <p>Check if the agent is available</p>
+                    <pre><code>curl https://dev.vibez.now/api/agent/status</code></pre>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>JavaScript Example</h2>
+                <pre><code>async function askAgent(userId, message) {
+  const response = await fetch('https://dev.vibez.now/api/agent/' + userId + '/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message })
+  });
+
+  const data = await response.json();
+  return data.reply;
+}
+
+// Usage
+const reply = await askAgent('user123', 'Create a calculator.js file');
+console.log(reply);</code></pre>
+            </div>
+
+            <div class="section">
+                <h2>React Native Example</h2>
+                <pre><code>import React, { useState } from 'react';
+import { View, TextInput, Button, Text } from 'react-native';
+
+export default function AgentChat() {
+  const [message, setMessage] = useState('');
+  const [reply, setReply] = useState('');
+
+  const sendMessage = async () => {
+    const response = await fetch('https://dev.vibez.now/api/agent/user123/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+
+    const data = await response.json();
+    setReply(data.reply);
+  };
+
+  return (
+    <View>
+      <TextInput value={message} onChangeText={setMessage} />
+      <Button title="Send" onPress={sendMessage} />
+      <Text>{reply}</Text>
+    </View>
+  );
+}</code></pre>
+            </div>
+
+            <div class="try-it">
+                <h3>Try It Now</h3>
+                <p>Test the API directly from your browser:</p>
+                <button onclick="tryAPI()">Send Test Request</button>
+                <div id="response"></div>
+            </div>
+
+            <div class="section">
+                <h2>Agent Capabilities</h2>
+                <ul style="list-style: none; padding-left: 0;">
+                    <li style="margin: 10px 0;">✅ <strong>read_file</strong> - Read file contents from workspace</li>
+                    <li style="margin: 10px 0;">✅ <strong>write_file</strong> - Create or modify files</li>
+                    <li style="margin: 10px 0;">✅ <strong>list_files</strong> - List directory contents</li>
+                    <li style="margin: 10px 0;">✅ <strong>run_node</strong> - Execute Node.js scripts</li>
+                    <li style="margin: 10px 0;">✅ <strong>delete_file</strong> - Remove files from workspace</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <h2>Resources</h2>
+                <ul>
+                    <li><a href="https://github.com/aw3-technology/vibez.now" target="_blank">GitHub Repository</a></li>
+                    <li><a href="https://github.com/aw3-technology/vibez.now/blob/master/AGENT_API.md" target="_blank">Full API Documentation</a></li>
+                    <li><a href="https://console.anthropic.com/" target="_blank">Anthropic Console</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check API status on load
+        fetch('https://dev.vibez.now/api/agent/status')
+            .then(res => res.json())
+            .then(data => {
+                const statusEl = document.getElementById('status');
+                if (data.success && data.agentAvailable) {
+                    statusEl.textContent = 'Agent Online & Ready';
+                } else {
+                    statusEl.textContent = 'Agent Offline';
+                }
+            })
+            .catch(() => {
+                document.getElementById('status').textContent = 'Unable to connect';
+            });
+
+        // Try API function
+        async function tryAPI() {
+            const responseEl = document.getElementById('response');
+            responseEl.textContent = 'Sending request...';
+            responseEl.className = '';
+
+            try {
+                const response = await fetch('https://dev.vibez.now/api/agent/demo-user/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: 'List all files in my workspace'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    responseEl.className = 'response-success';
+                    responseEl.innerHTML = '<strong>Success!</strong><br>' +
+                                          '<strong>Agent Reply:</strong> ' + data.reply + '<br>' +
+                                          '<strong>Tokens Used:</strong> ' + data.usage.totalTokens;
+                } else {
+                    responseEl.className = 'response-error';
+                    responseEl.textContent = 'Error: ' + data.error;
+                }
+            } catch (error) {
+                responseEl.className = 'response-error';
+                responseEl.textContent = 'Request failed: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
