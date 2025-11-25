@@ -401,9 +401,36 @@ export default function AgentChat() {
             </div>
 
             <div class="try-it">
-                <h3>Try It Now</h3>
-                <p>Test the API directly from your browser:</p>
-                <button onclick="tryAPI()">Send Test Request</button>
+                <h3>Create Account & Try Agent</h3>
+                <div id="auth-section">
+                    <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                        <div style="flex: 1;">
+                            <h4 style="color: white; margin-bottom: 10px;">Register</h4>
+                            <input type="email" id="reg-email" placeholder="Email" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 4px; border: none;">
+                            <input type="text" id="reg-username" placeholder="Username" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 4px; border: none;">
+                            <input type="password" id="reg-password" placeholder="Password" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 4px; border: none;">
+                            <button onclick="register()">Create Account</button>
+                        </div>
+                        <div style="flex: 1;">
+                            <h4 style="color: white; margin-bottom: 10px;">Login</h4>
+                            <input type="email" id="login-email" placeholder="Email" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 4px; border: none;">
+                            <input type="password" id="login-password" placeholder="Password" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 4px; border: none;">
+                            <button onclick="login()">Login</button>
+                        </div>
+                    </div>
+                    <div id="user-info" style="display: none; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 6px; margin-bottom: 20px;">
+                        <p style="margin: 0; color: white;">Logged in as: <strong id="user-email"></strong></p>
+                        <button onclick="logout()" style="margin-top: 10px; background: rgba(220, 53, 69, 0.8);">Logout</button>
+                    </div>
+                </div>
+
+                <div id="chat-section" style="display: none;">
+                    <h4 style="color: white; margin-bottom: 10px;">Chat with Agent</h4>
+                    <textarea id="agent-message" placeholder="Ask the agent something... e.g., 'Create a hello.js file'" style="width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 4px; border: none; min-height: 80px;"></textarea>
+                    <button onclick="sendToAgent()">Send to Agent</button>
+                    <button onclick="clearHistory()" style="background: rgba(220, 53, 69, 0.8); margin-left: 10px;">Clear History</button>
+                </div>
+
                 <div id="response"></div>
             </div>
 
@@ -432,6 +459,10 @@ export default function AgentChat() {
     </div>
 
     <script>
+        // Store auth token
+        let authToken = localStorage.getItem('vibez_token');
+        let currentUser = JSON.parse(localStorage.getItem('vibez_user') || 'null');
+
         // Check API status on load
         fetch('https://dev.vibez.now/api/agent/status')
             .then(res => res.json())
@@ -447,35 +478,166 @@ export default function AgentChat() {
                 document.getElementById('status').textContent = 'Unable to connect';
             });
 
-        // Try API function
-        async function tryAPI() {
+        // Check if already logged in
+        if (authToken && currentUser) {
+            showLoggedIn();
+        }
+
+        function showResponse(message, isError = false) {
             const responseEl = document.getElementById('response');
-            responseEl.textContent = 'Sending request...';
-            responseEl.className = '';
+            responseEl.className = isError ? 'response-error' : 'response-success';
+            responseEl.innerHTML = message;
+        }
+
+        function showLoggedIn() {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('chat-section').style.display = 'block';
+            document.getElementById('user-info').style.display = 'block';
+            document.getElementById('user-email').textContent = currentUser.email;
+        }
+
+        function showLoggedOut() {
+            document.getElementById('auth-section').style.display = 'block';
+            document.getElementById('chat-section').style.display = 'none';
+            document.getElementById('user-info').style.display = 'none';
+            authToken = null;
+            currentUser = null;
+            localStorage.removeItem('vibez_token');
+            localStorage.removeItem('vibez_user');
+        }
+
+        async function register() {
+            const email = document.getElementById('reg-email').value;
+            const username = document.getElementById('reg-username').value;
+            const password = document.getElementById('reg-password').value;
+
+            if (!email || !username || !password) {
+                showResponse('Please fill in all fields', true);
+                return;
+            }
+
+            showResponse('Creating account...');
 
             try {
-                const response = await fetch('https://dev.vibez.now/api/agent/demo-user/chat', {
+                const response = await fetch('https://dev.vibez.now/api/auth/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        message: 'List all files in my workspace'
-                    })
+                    body: JSON.stringify({ email, username, password })
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    responseEl.className = 'response-success';
-                    responseEl.innerHTML = '<strong>Success!</strong><br>' +
-                                          '<strong>Agent Reply:</strong> ' + data.reply + '<br>' +
-                                          '<strong>Tokens Used:</strong> ' + data.usage.totalTokens;
+                    authToken = data.token;
+                    currentUser = data.user;
+                    localStorage.setItem('vibez_token', authToken);
+                    localStorage.setItem('vibez_user', JSON.stringify(currentUser));
+                    showResponse(`Account created! Welcome ${username}!`);
+                    showLoggedIn();
                 } else {
-                    responseEl.className = 'response-error';
-                    responseEl.textContent = 'Error: ' + data.error;
+                    showResponse(`Registration failed: ${data.error}`, true);
                 }
             } catch (error) {
-                responseEl.className = 'response-error';
-                responseEl.textContent = 'Request failed: ' + error.message;
+                showResponse(`Error: ${error.message}`, true);
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            if (!email || !password) {
+                showResponse('Please fill in email and password', true);
+                return;
+            }
+
+            showResponse('Logging in...');
+
+            try {
+                const response = await fetch('https://dev.vibez.now/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    authToken = data.token;
+                    currentUser = data.user;
+                    localStorage.setItem('vibez_token', authToken);
+                    localStorage.setItem('vibez_user', JSON.stringify(currentUser));
+                    showResponse(`Welcome back, ${currentUser.username}!`);
+                    showLoggedIn();
+                } else {
+                    showResponse(`Login failed: ${data.error}`, true);
+                }
+            } catch (error) {
+                showResponse(`Error: ${error.message}`, true);
+            }
+        }
+
+        function logout() {
+            showResponse('Logged out successfully');
+            showLoggedOut();
+        }
+
+        async function sendToAgent() {
+            const message = document.getElementById('agent-message').value;
+
+            if (!message) {
+                showResponse('Please enter a message', true);
+                return;
+            }
+
+            showResponse('Sending to agent...');
+
+            try {
+                const response = await fetch('https://dev.vibez.now/api/agent/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResponse(`
+                        <strong>Agent Reply:</strong><br>
+                        <div style="margin: 10px 0; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 4px; white-space: pre-wrap;">${data.reply}</div>
+                        <strong>Tokens Used:</strong> ${data.usage.totalTokens} |
+                        <strong>Tool Calls:</strong> ${data.toolCalls} |
+                        <strong>Conversation Length:</strong> ${data.conversationLength}
+                    `);
+                } else {
+                    showResponse(`Agent Error: ${data.error}`, true);
+                }
+            } catch (error) {
+                showResponse(`Error: ${error.message}`, true);
+            }
+        }
+
+        async function clearHistory() {
+            try {
+                const response = await fetch('https://dev.vibez.now/api/agent/history', {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showResponse('Conversation history cleared!');
+                } else {
+                    showResponse(`Error: ${data.error}`, true);
+                }
+            } catch (error) {
+                showResponse(`Error: ${error.message}`, true);
             }
         }
     </script>
