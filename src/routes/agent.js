@@ -1,6 +1,7 @@
 // Agent API routes
 const express = require('express');
 const { createCodingAgent } = require('../agents/claudeCodingAgent');
+const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -26,11 +27,11 @@ function getConversationHistory(userId) {
 }
 
 /**
- * POST /api/agent/:userId/chat
- * Send a message to the coding agent
+ * POST /api/agent/chat
+ * Send a message to the coding agent (authenticated)
  */
-router.post('/:userId/chat', async (req, res) => {
-  const { userId } = req.params;
+router.post('/chat', authenticateToken, async (req, res) => {
+  const userId = req.user.userId; // Use authenticated user's ID
   const { message, clearHistory } = req.body;
 
   // Validation
@@ -82,11 +83,11 @@ router.post('/:userId/chat', async (req, res) => {
 });
 
 /**
- * GET /api/agent/:userId/history
- * Get conversation history for a user
+ * GET /api/agent/history
+ * Get conversation history for authenticated user
  */
-router.get('/:userId/history', (req, res) => {
-  const { userId } = req.params;
+router.get('/history', authenticateToken, (req, res) => {
+  const userId = req.user.userId;
   const history = getConversationHistory(userId);
 
   return res.json({
@@ -98,11 +99,11 @@ router.get('/:userId/history', (req, res) => {
 });
 
 /**
- * DELETE /api/agent/:userId/history
- * Clear conversation history for a user
+ * DELETE /api/agent/history
+ * Clear conversation history for authenticated user
  */
-router.delete('/:userId/history', (req, res) => {
-  const { userId } = req.params;
+router.delete('/history', authenticateToken, (req, res) => {
+  const userId = req.user.userId;
   conversations.delete(userId);
 
   return res.json({

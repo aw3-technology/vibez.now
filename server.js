@@ -45,6 +45,10 @@ app.get('/api/v1/vibez', (req, res) => {
   });
 });
 
+// Auth routes
+const authRoutes = require('./src/routes/auth');
+app.use('/api/auth', authRoutes);
+
 // Agent routes
 const agentRoutes = require('./src/routes/agent');
 app.use('/api/agent', agentRoutes);
