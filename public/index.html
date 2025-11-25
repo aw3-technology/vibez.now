@@ -228,8 +228,8 @@
                         <p>Powered by Anthropic's latest model</p>
                     </div>
                     <div class="feature-card">
-                        <h4>🔧 5 Core Tools</h4>
-                        <p>Read, write, list, delete files, run code</p>
+                        <h4>🔧 6 Core Tools</h4>
+                        <p>Read, write, list, delete files, run code, request approval</p>
                     </div>
                     <div class="feature-card">
                         <h4>🔒 Isolated Workspaces</h4>
@@ -238,6 +238,14 @@
                     <div class="feature-card">
                         <h4>💬 Conversation History</h4>
                         <p>Stateful conversations per user</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>✅ Approval Requests</h4>
+                        <p>Agent requests approval for critical actions</p>
+                    </div>
+                    <div class="feature-card">
+                        <h4>📱 Mobile Integration</h4>
+                        <p>Approve requests via Vibez.now app</p>
                     </div>
                 </div>
             </div>
@@ -407,7 +415,9 @@ export default function AgentChat() {
                     <li style="margin: 10px 0;">✅ <strong>list_files</strong> - List directory contents</li>
                     <li style="margin: 10px 0;">✅ <strong>run_node</strong> - Execute Node.js scripts</li>
                     <li style="margin: 10px 0;">✅ <strong>delete_file</strong> - Remove files from workspace</li>
+                    <li style="margin: 10px 0;">✅ <strong>request_approval</strong> - Request user approval via mobile app for critical actions</li>
                 </ul>
+                <p style="margin-top: 20px;"><strong>Smart Approval System:</strong> The agent automatically requests approval before performing destructive or critical actions like deleting multiple files, deploying code, or running dangerous commands. You'll receive a notification in your Vibez.now mobile app to approve or reject the action.</p>
             </div>
 
             <div class="section">

@@ -10,6 +10,10 @@ const { promisify } = require('util');
 
 const execAsync = promisify(exec);
 
+// Vibez.now approval API configuration
+const APPROVAL_API_URL = 'https://ugqmlxjswokfbfwppehz.supabase.co/functions/v1/submit-request';
+const APPROVAL_API_KEY = '72fca02d-b5a5-4eb7-8c63-2e687f9c0a7e';
+
 // Workspace root - will be per-user
 const WORKSPACES_ROOT = path.join(process.cwd(), 'workspaces');
 
@@ -180,6 +184,61 @@ const deleteFileTool = createTool({
 });
 
 /**
+ * Tool: Request user approval
+ */
+const requestApprovalTool = createTool({
+  name: 'request_approval',
+  description: 'Request approval from the user before performing a critical action like deleting multiple files, running destructive commands, or deploying code. Use this when you need explicit user confirmation.',
+  parameters: z.object({
+    title: z.string().describe('Short title describing what needs approval (e.g., "Delete 10 files", "Deploy to production")'),
+    description: z.string().describe('Detailed description of the action and why approval is needed'),
+    code_snippet: z.string().optional().describe('Optional code snippet or command that will be executed'),
+    metadata: z.record(z.any()).optional().describe('Optional additional metadata'),
+  }),
+  async execute({ title, description, code_snippet, metadata }, { userId }) {
+    try {
+      const response = await fetch(APPROVAL_API_URL, {
+        method: 'POST',
+        headers: {
+          'x-api-key': APPROVAL_API_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title,
+          description,
+          code_snippet,
+          metadata: {
+            ...metadata,
+            userId,
+            timestamp: new Date().toISOString(),
+          },
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        return {
+          success: true,
+          message: 'Approval request submitted successfully. Please check your Vibez.now app to approve or reject.',
+          requestId: data.id || data.request_id,
+        };
+      } else {
+        return {
+          success: false,
+          error: `Failed to submit approval request: ${data.error || response.statusText}`,
+        };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        error: `Error submitting approval request: ${error.message}`,
+      };
+    }
+  },
+});
+
+/**
  * Create a Claude coding agent instance
  */
 function createCodingAgent() {
@@ -210,7 +269,16 @@ Best practices:
 4. Test your code using run_node when appropriate
 5. Be helpful, clear, and concise in your responses
 
-Remember: Each user has their own isolated workspace. You can only access files within the current user's workspace.`,
+Remember: Each user has their own isolated workspace. You can only access files within the current user's workspace.
+
+**IMPORTANT - When to request approval:**
+- Before deleting multiple files or important files
+- Before running potentially destructive commands
+- Before making significant changes to critical files
+- When deploying or publishing code
+- Any action that could have major consequences
+
+Use the request_approval tool to get explicit user confirmation via the Vibez.now mobile app.`,
     model,
     tools: [
       readFileTool,
@@ -218,6 +286,7 @@ Remember: Each user has their own isolated workspace. You can only access files 
       listFilesTool,
       runNodeTool,
       deleteFileTool,
+      requestApprovalTool,
     ],
   });
 }
