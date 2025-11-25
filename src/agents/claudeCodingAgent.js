@@ -193,9 +193,8 @@ const requestApprovalTool = createTool({
     title: z.string().describe('Short title describing what needs approval (e.g., "Delete 10 files", "Deploy to production")'),
     description: z.string().describe('Detailed description of the action and why approval is needed'),
     code_snippet: z.string().optional().describe('Optional code snippet or command that will be executed'),
-    metadata: z.record(z.any()).optional().describe('Optional additional metadata'),
   }),
-  async execute({ title, description, code_snippet, metadata }, { userId }) {
+  async execute({ title, description, code_snippet }, { userId }) {
     try {
       const response = await fetch(APPROVAL_API_URL, {
         method: 'POST',
@@ -208,7 +207,6 @@ const requestApprovalTool = createTool({
           description,
           code_snippet,
           metadata: {
-            ...metadata,
             userId,
             timestamp: new Date().toISOString(),
           },
