@@ -237,13 +237,43 @@ const requestApprovalTool = createTool({
 });
 
 /**
+ * Tool: Configure Git credentials
+ */
+const gitConfigTool = createTool({
+  name: 'git_config',
+  description: 'Configure Git user identity (name and email) for commits in the workspace. Required before committing.',
+  parameters: z.object({
+    name: z.string().describe('Git user name for commits'),
+    email: z.string().describe('Git user email for commits'),
+  }),
+  async execute({ name, email }, { userId }) {
+    const workspaceRoot = await getUserWorkspace(userId);
+
+    try {
+      await execAsync(`git config --global user.name "${name}"`, { cwd: workspaceRoot });
+      await execAsync(`git config --global user.email "${email}"`, { cwd: workspaceRoot });
+
+      return {
+        success: true,
+        message: `Git configured with name: ${name}, email: ${email}`,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  },
+});
+
+/**
  * Tool: Clone a Git repository
  */
 const gitCloneTool = createTool({
   name: 'git_clone',
-  description: 'Clone a Git repository into a folder in the workspace. Useful for pulling projects from GitHub.',
+  description: 'Clone a Git repository into a folder in the workspace. Useful for pulling projects from GitHub. For private repos, include token in URL: https://TOKEN@github.com/user/repo.git',
   parameters: z.object({
-    repoUrl: z.string().describe('Git repository URL (e.g., https://github.com/user/repo.git)'),
+    repoUrl: z.string().describe('Git repository URL. For private repos use: https://TOKEN@github.com/user/repo.git where TOKEN is a GitHub Personal Access Token'),
     folderName: z.string().describe('Name of the folder to clone into'),
     branch: z.string().optional().describe('Specific branch to clone (optional, defaults to main/master)'),
   }),
@@ -358,15 +388,17 @@ Your capabilities:
 - list_files: List directory contents
 - delete_file: Remove files
 - run_node: Execute Node.js scripts and see their output
-- git_clone: Clone a Git repository into a folder
+- git_config: Configure Git user name and email (required before committing)
+- git_clone: Clone a Git repository into a folder (supports private repos with tokens)
 - git_command: Run git commands (status, add, commit, push, pull, etc.)
 
 Git workflow example:
-1. Use git_clone to clone a repository: git_clone with repoUrl and folderName
-2. Make changes to files using write_file
-3. Stage changes: git_command with command "add ." and folderPath
-4. Commit: git_command with command "commit -m 'your message'" and folderPath
-5. Push: git_command with command "push origin main" and folderPath
+1. Configure Git identity: git_config with name and email
+2. Clone repository: git_clone with repoUrl (use https://TOKEN@github.com/user/repo.git for private repos) and folderName
+3. Make changes to files using write_file
+4. Stage changes: git_command with command "add ." and folderPath
+5. Commit: git_command with command "commit -m 'your message'" and folderPath
+6. Push: git_command with command "push" and folderPath (token in clone URL is cached)
 
 Best practices:
 1. Always check if a file exists using list_files before reading
@@ -394,6 +426,7 @@ Use the request_approval tool to get explicit user confirmation via the Vibez.no
       listFilesTool,
       runNodeTool,
       deleteFileTool,
+      gitConfigTool,
       gitCloneTool,
       gitCommandTool,
       requestApprovalTool,
